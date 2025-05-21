@@ -1,52 +1,97 @@
 <?php
 // untuk data siswa
 // berkaitan dengan CRUD siswa
-class Student extends Model {
-  private $lastErrorCode;
+class Student extends Model
+{
+    private $lastErrorCode;
 
-  public function getAll() {
-    // todo: menampilkan seluruh data siswa
-    // 1. tampilkan seluruh data siswa
-    // 2. kembalikan hasil dari querynya
-  }
+    public function getAll()
+    {
+        $sql    = "SELECT * FROM students ORDER BY id ASC";
+        $result = $this->dbconn->query($sql);
 
-  public function getById() {
-    // todo: menampilkan data siswa berdasarkan id
-    // 1. tambahkan parameter id
-    // 2. tampilkan data siswa berdasarkan id tersebut
-    // 3. kembalikan hasil dari querynya cukup 1 baris saja
-  }
+        if ($result) {
+            return $result;
+        }
 
-  public function create() {
-    // todo: menambahkan data siswa
-    // 1. tambahkan parameter nama, nim, dan alamat
-    // 2. tambahkan data siswa berdasarkan parameter tersebut
-    // 3. jika data siswa unik (cek struktur tabel), 
-    //    kembalikan hasil dari querynya
-    // 4. jika data siswa ganda, isi lastErrorCode dengan kode errornya,
-    //    kembalikan nilai false
-    // NB: gunakan exception handling
-  }
+        return false;
+    }
 
-  public function update() {
-    // todo: mengubah data siswa
-    // 1. tambahkan parameter id, nama, nim, dan alamat
-    // 2. ubah data siswa berdasarkan parameter tersebut
-    // 3. jika data siswa unik (cek struktur tabel), 
-    //    kembalikan hasil dari querynya
-    // 4. jika data siswa ganda, isi lastErrorCode dengan kode errornya,
-    //    kembalikan nilai false
-    // NB: gunakan exception handling
-  }
+    public function getById($id)
+    {
+        $id     = $this->dbconn->real_escape_string($id);
+        $sql    = "SELECT * FROM students WHERE id = '$id'";
+        $result = $this->dbconn->query($sql);
 
-  public function delete() {
-    // todo: menghapus data siswa
-    // 1. tambahkan parameter id
-    // 2. hapus data siswa berdasarkan parameter tersebut
-    // 3. kembalikan hasil dari querynya
-  }
+        if ($result && $result->num_rows > 0) {
+            return $result->fetch_object();
+        }
 
-  public function getLastErrorCode() {
-    return $this->lastErrorCode;
-  }
+        return false;
+    }
+
+    public function create($name, $nim, $address)
+    {
+        try {
+            $name    = $this->dbconn->real_escape_string($name);
+            $nim     = $this->dbconn->real_escape_string($nim);
+            $address = $this->dbconn->real_escape_string($address);
+
+            $checkSql    = "SELECT * FROM students WHERE nim = '$nim'";
+            $checkResult = $this->dbconn->query($checkSql);
+
+            if ($checkResult && $checkResult->num_rows > 0) {
+                $this->lastErrorCode = 1062;
+                return false;
+            }
+
+            $sql    = "INSERT INTO students (name, nim, address) VALUES ('$name', '$nim', '$address')";
+            $result = $this->dbconn->query($sql);
+
+            return $result;
+        } catch (Exception $e) {
+            $this->lastErrorCode = $this->dbconn->errno;
+            return false;
+        }
+    }
+
+    public function update($id, $name, $nim, $address)
+    {
+        try {
+            $id      = $this->dbconn->real_escape_string($id);
+            $name    = $this->dbconn->real_escape_string($name);
+            $nim     = $this->dbconn->real_escape_string($nim);
+            $address = $this->dbconn->real_escape_string($address);
+
+            $checkSql    = "SELECT * FROM students WHERE nim = '$nim' AND id != '$id'";
+            $checkResult = $this->dbconn->query($checkSql);
+
+            if ($checkResult && $checkResult->num_rows > 0) {
+                $this->lastErrorCode = 1062;
+                return false;
+            }
+
+            $sql    = "UPDATE students SET name = '$name', nim = '$nim', address = '$address' WHERE id = '$id'";
+            $result = $this->dbconn->query($sql);
+
+            return $result;
+        } catch (Exception $e) {
+            $this->lastErrorCode = $this->dbconn->errno;
+            return false;
+        }
+    }
+
+    public function delete($id)
+    {
+        $id     = $this->dbconn->real_escape_string($id);
+        $sql    = "DELETE FROM students WHERE id = '$id'";
+        $result = $this->dbconn->query($sql);
+
+        return $result;
+    }
+
+    public function getLastErrorCode()
+    {
+        return $this->lastErrorCode;
+    }
 }

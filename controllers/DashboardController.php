@@ -2,77 +2,196 @@
 // untuk dashboard (dashboard utama, profil, settings, dll)
 // untuk CRUD data siswa
 // berkaitan dengan views/dashboard/*.php
-class DashboardController extends Controller {
-  public function __construct() {
-    session_start();
-    if (!isset($_SESSION['user'])) {
-      header("Location:?c=auth&m=login");
-      exit();
+class DashboardController extends Controller
+{
+    public function __construct()
+    {
+        session_start();
+        if (! isset($_SESSION['user'])) {
+            header("Location:?c=auth&m=login");
+            exit();
+        }
     }
-  }
-  
-  public function index() {
-    $title = 'Dashboard';
 
-    $this->loadView(
-      "dashboard/index",
-      [
-        'title' => $title,
-        'username' => $_SESSION['user']['name']
-      ],
-      'main'
-    );
-  }
+    public function index()
+    {
+        $title = 'Dashboard';
+        $this->loadView(
+            "dashboard/index",
+            [
+                'title'    => $title,
+                'username' => $_SESSION['user']['name'],
+            ],
+            'main'
+        );
+    }
 
-  public function profile() {
-    // todo: menampilkan halaman profile pengguna yang login
-    // 1. tampilkan halaman profile. gunakan layout 'main'
-    // 2. gunakan data session untuk menampilkan profile pengguna
-  }
+    public function profile()
+    {
+        $title = 'User Profile';
+        $this->loadView(
+            "dashboard/profile",
+            [
+                'title'    => $title,
+                'username' => $_SESSION['user']['name'],
+                'user_id'  => $_SESSION['user']['id'],
+            ],
+            'main'
+        );
+    }
 
-  public function getAllStudents() {
-    // todo: menampilkan semua data siswa
-    // 1. ambil data seluruh siswa dari database
-    // 2. tampilkan halaman students (index). gunakan layout 'main'
-  }
+    public function getAllStudents()
+    {
+        $title        = 'Student List';
+        $studentModel = $this->loadModel("student");
+        $students     = $studentModel->getAll();
 
-  public function createStudent() {
-    // todo: menampilkan halaman tambah siswa
-    // 1. tampilkan halaman tambah siswa (create). gunakan layout 'main'
-  }
+        $this->loadView(
+            "dashboard/students/index",
+            [
+                'title'    => $title,
+                'username' => $_SESSION['user']['name'],
+                'students' => $students,
+            ],
+            'main'
+        );
+    }
 
-  public function insertStudent() {
-    // todo: menambahkan data siswa
-    // 1. baca data yang dikirim dari form
-    // 2. tambah data siswa ke dalam database.
-    //    - jika sukses tampilkan halaman seluruh data siswa
-    //    - jika gagal, tetap tampilkan halaman tambah siswa 
-    //      dengan menampilkan pesan error
-  }
+    public function createStudent()
+    {
+        $title = 'Add Student';
+        $this->loadView(
+            "dashboard/students/create",
+            [
+                'title'    => $title,
+                'username' => $_SESSION['user']['name'],
+            ],
+            'main'
+        );
+    }
 
-  public function editStudent() {
-    // todo: menampilkan halaman ubah data siswa
-    // 1. baca data id yang dikirimkan melalui url 
-    //    sesuai id siswa yang akan diubah
-    // 2. ambil data siswa dari database berdasarkan id tersebut
-    // 3. tampilkan halaman ubah data siswa (edit). gunakan layout 'main'.
-    //    seluruh data siswa dengan id tersebut ditampilkan di form
-  }
+    public function insertStudent()
+    {
+        $name    = $_POST['name'] ?? '';
+        $nim     = $_POST['nim'] ?? '';
+        $address = $_POST['address'] ?? '';
 
-  public function updateStudent() {
-    // todo: mengubah data siswa
-    // 1. baca data yang dikirim dari form
-    // 2. ubah data siswa ke dalam database.
-    //    - jika sukses tampilkan halaman seluruh data siswa
-    //    - jika gagal, tetap tampilkan halaman ubah data siswa 
-    //      dengan menampilkan pesan error
-  }
+        $studentModel = $this->loadModel("student");
+        $result       = $studentModel->create($name, $nim, $address);
 
-  public function deleteStudent() {
-    // todo: menghapus data siswa
-    // 1. baca data id yang dikirimkan melalui url 
-    //    sesuai id siswa yang akan dihapus
-    // 2. hapus data siswa yang ada di dalam database.
-    //    - jika sukses tampilkan halaman seluruh data siswa
-  }
+        if ($result) {
+            header("Location:?c=dashboard&m=getAllStudents");
+            exit();
+        } else {
+            $errorCode    = $studentModel->getLastErrorCode();
+            $errorMessage = "Gagal menambahkan data siswa";
+
+            if ($errorCode == 1062) {
+                $errorMessage = "Data siswa dengan NIM yang sama sudah ada";
+            }
+
+            $this->loadView(
+                "dashboard/students/create",
+                [
+                    'title'    => 'Tambah Siswa',
+                    'username' => $_SESSION['user']['name'],
+                    'error'    => $errorMessage,
+                    'name'     => $name,
+                    'nim'      => $nim,
+                    'address'  => $address,
+                ],
+                'main'
+            );
+        }
+    }
+
+    public function editStudent()
+    {
+        $title = 'Edit Student';
+        $id    = $_GET['id'] ?? 0;
+
+        if (! $id) {
+            header("Location:?c=dashboard&m=getAllStudents");
+            exit();
+        }
+
+        $studentModel = $this->loadModel("student");
+        $student      = $studentModel->getById($id);
+
+        if (! $student) {
+            header("Location:?c=dashboard&m=getAllStudents");
+            exit();
+        }
+
+        $this->loadView(
+            "dashboard/students/edit",
+            [
+                'title'    => $title,
+                'username' => $_SESSION['user']['name'],
+                'student'  => $student,
+            ],
+            'main'
+        );
+    }
+
+    public function updateStudent()
+    {
+        $id      = $_POST['id'] ?? 0;
+        $name    = $_POST['name'] ?? '';
+        $nim     = $_POST['nim'] ?? '';
+        $address = $_POST['address'] ?? '';
+
+        if (! $id) {
+            header("Location:?c=dashboard&m=getAllStudents");
+            exit();
+        }
+
+        $studentModel = $this->loadModel("student");
+        $result       = $studentModel->update($id, $name, $nim, $address);
+
+        if ($result) {
+            header("Location:?c=dashboard&m=getAllStudents");
+            exit();
+        } else {
+            $errorCode    = $studentModel->getLastErrorCode();
+            $errorMessage = "Gagal mengubah data siswa";
+
+            if ($errorCode == 1062) {
+                $errorMessage = "Data siswa dengan NIM yang sama sudah ada";
+            }
+
+            $student          = new stdClass();
+            $student->id      = $id;
+            $student->name    = $name;
+            $student->nim     = $nim;
+            $student->address = $address;
+
+            $this->loadView(
+                "dashboard/students/edit",
+                [
+                    'title'    => 'Edit Student',
+                    'username' => $_SESSION['user']['name'],
+                    'error'    => $errorMessage,
+                    'student'  => $student,
+                ],
+                'main'
+            );
+        }
+    }
+
+    public function deleteStudent()
+    {
+        $id = $_GET['id'] ?? 0;
+
+        if (! $id) {
+            header("Location:?c=dashboard&m=getAllStudents");
+            exit();
+        }
+
+        $studentModel = $this->loadModel("student");
+        $result       = $studentModel->delete($id);
+
+        header("Location:?c=dashboard&m=getAllStudents");
+        exit();
+    }
 }
