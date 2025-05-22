@@ -11,11 +11,16 @@ class Student extends Model
         $result = $this->dbconn->query($sql);
 
         if ($result) {
-            return $result;
+            $students = [];
+            while ($row = $result->fetch_object()) {
+                $students[] = $row;
+            }
+            return $students;
         }
 
         return false;
     }
+
 
     public function getById($id)
     {

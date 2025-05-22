@@ -7,7 +7,7 @@ class Model
     {
         $host     = "localhost";
         $username = "root";
-        $password = "admin123";
+        $password = "";
         $database = "mvc";
 
         $this->dbconn = new mysqli($host, $username, $password, $database);
