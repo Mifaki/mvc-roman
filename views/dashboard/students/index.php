@@ -1,4 +1,4 @@
-<h2><?php echo $title ?></h2>
+<h2><?= $title ?></h2>
 
 <div class="students-container">
     <div class="action-buttons">
@@ -21,13 +21,13 @@
             <tbody>
                 <?php foreach ($students as $student): ?>
                 <tr>
-                    <td><?php echo htmlspecialchars($student['id']) ?></td>
-                    <td><?php echo htmlspecialchars($student['name']) ?></td>
-                    <td><?php echo htmlspecialchars($student['nim']) ?></td>
-                    <td><?php echo htmlspecialchars($student['address']) ?></td>
+                    <td><?= htmlspecialchars($student->id) ?></td>
+                    <td><?= htmlspecialchars($student->name) ?></td>
+                    <td><?= htmlspecialchars($student->nim) ?></td>
+                    <td><?= htmlspecialchars($student->address) ?></td>
                     <td class="action-links">
-                        <a href="?c=dashboard&m=editStudent&id=<?php echo $student['id'] ?>">Edit</a> |
-                        <a href="?c=dashboard&m=deleteStudent&id=<?php echo $student['id'] ?>" onclick="return confirm('Are you sure you want to delete this student?')">Delete</a>
+                        <a href="?c=dashboard&m=editStudent&id=<?= $student->id ?>">Edit</a> |
+                        <a href="?c=dashboard&m=deleteStudent&id=<?= $student->id ?>" onclick="return confirm('Are you sure you want to delete this student?')">Delete</a>
                     </td>
                 </tr>
                 <?php endforeach; ?>
